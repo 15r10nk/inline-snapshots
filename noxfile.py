@@ -43,3 +43,26 @@ def docs(session):
     session.install("poetry")
     session.run("poetry", "install", "--with=doc")
     session.run("mkdocs", "build", *session.posargs)
+
+
+@nox.session(python="python3.10")
+def mutmut(session):
+    session.install("poetry")
+    session.run("poetry", "install", "--with=dev")
+
+    coverage = False
+
+    if coverage:
+        session.run("coverage", "erase")
+
+        session.env["COVERAGE_PROCESS_START"] = str(
+            Path(__file__).parent / "pyproject.toml"
+        )
+        session.env["TOP"] = str(Path(__file__).parent)
+        session.run("pytest", "--doctest-modules", "inline_snapshot", "tests")
+        session.run("coverage", "combine")
+
+    session.run("mutmut", "run", *session.posargs)
+
+    if coverage:
+        session.run("coverage", "erase")

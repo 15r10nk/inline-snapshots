@@ -12,6 +12,9 @@ version_files = [
 ]
 version_provider = "poetry"
 
+[tool.coverage.html]
+show_contexts = true
+
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "assert False", "raise NotImplemented", "\\.\\.\\."]
 
@@ -51,6 +54,7 @@ python = "^3.7"
 coverage = "^7.2.3"
 coverage-enable-subprocess = "^1.0"
 hypothesis = "^6.75.5"
+mutmut = "^2.4.3"
 mypy = "^1.2.0"
 pytest = "^7.1"
 pytest-subtests = "^0.11.0"

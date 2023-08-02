@@ -255,9 +255,9 @@ def test_mutable_values(check_update):
     assert (
         check_update(
             """
-l=[1,2]
+l=[1,[2]]
 assert l==snapshot()
-l.append(3)
+l[1].append(4)
 assert l==snapshot()
     """,
             flags="create",
@@ -265,10 +265,10 @@ assert l==snapshot()
         )
         == snapshot(
             """
-l=[1,2]
-assert l==snapshot([1, 2])
-l.append(3)
-assert l==snapshot([1, 2, 3])
+l=[1,[2]]
+assert l==snapshot([1, [2]])
+l[1].append(4)
+assert l==snapshot([1, [2, 4]])
 """
         )
     )
@@ -276,9 +276,9 @@ assert l==snapshot([1, 2, 3])
     assert (
         check_update(
             """
-l=[1,2]
+l=[1,[2]]
 assert l<=snapshot()
-l.append(3)
+l[1].append(4)
 assert l<=snapshot()
     """,
             flags="create",
@@ -286,10 +286,10 @@ assert l<=snapshot()
         )
         == snapshot(
             """
-l=[1,2]
-assert l<=snapshot([1, 2])
-l.append(3)
-assert l<=snapshot([1, 2, 3])
+l=[1,[2]]
+assert l<=snapshot([1, [2]])
+l[1].append(4)
+assert l<=snapshot([1, [2, 4]])
 """
         )
     )
@@ -297,9 +297,9 @@ assert l<=snapshot([1, 2, 3])
     assert (
         check_update(
             """
-l=[1,2]
+l=[1,[2]]
 assert l>=snapshot()
-l.append(3)
+l[1].append(4)
 assert l>=snapshot()
     """,
             flags="create",
@@ -307,10 +307,10 @@ assert l>=snapshot()
         )
         == snapshot(
             """
-l=[1,2]
-assert l>=snapshot([1, 2])
-l.append(3)
-assert l>=snapshot([1, 2, 3])
+l=[1,[2]]
+assert l>=snapshot([1, [2]])
+l[1].append(4)
+assert l>=snapshot([1, [2, 4]])
 """
         )
     )
@@ -318,9 +318,9 @@ assert l>=snapshot([1, 2, 3])
     assert (
         check_update(
             """
-l=[1,2]
+l=[1,[2]]
 assert l in snapshot()
-l.append(3)
+l[1].append(4)
 assert l in snapshot()
     """,
             flags="create",
@@ -328,10 +328,10 @@ assert l in snapshot()
         )
         == snapshot(
             """
-l=[1,2]
-assert l in snapshot([[1, 2]])
-l.append(3)
-assert l in snapshot([[1, 2, 3]])
+l=[1,[2]]
+assert l in snapshot([[1, [2]]])
+l[1].append(4)
+assert l in snapshot([[1, [2, 4]]])
 """
         )
     )
@@ -661,12 +661,17 @@ def test_plain(check_update):
 def test_string_update(check_update):
     # black --preview wraps strings to keep the line length.
     # string concatenation should produce updates.
-    assert (
-        check_update(
-            'assert "ab" == snapshot("a" "b")', reported_flags="", flags="update"
-        )
-        == 'assert "ab" == snapshot("a" "b")'
-    )
+
+    for prefix in ("", "b"):
+        for quote in "'\"":
+            stmt = f'assert {prefix}"ab" == snapshot({prefix}{quote}a{quote} {prefix}{quote}b{quote})'
+
+            assert check_update(stmt, reported_flags="", flags="update") == stmt
+
+            stmt = f'assert {prefix}"ab" == snapshot({prefix}{quote*3}a{quote*3} {prefix}{quote*3}b{quote*3})'
+            result_stmt = f'assert {prefix}"ab" == snapshot({prefix}"ab")'
+
+            assert check_update(stmt, flags="update") == result_stmt
 
     assert (
         check_update(
