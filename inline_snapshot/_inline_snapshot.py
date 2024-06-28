@@ -237,7 +237,7 @@ class EqValue(GenericValue):
         if self._new_value is undefined:
             self._new_value = other
 
-        return self._visible_value() == other
+        return other == self._visible_value()
 
     def _new_code(self):
         return self._value_to_code(self._new_value)
@@ -355,7 +355,7 @@ class EqValue(GenericValue):
             # generic fallback
             new_token = value_to_token(new_value)
 
-            if not old_value == new_value:
+            if not new_value == old_value:
                 flag = "fix"
             elif (
                 self._ast_node is not None

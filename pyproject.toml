@@ -56,6 +56,7 @@ asttokens = ">=2.0.5"
 black = ">=23.3.0"
 click = ">=8.1.4"
 executing = ">=2.0.0"
+pandas = {version = "^2.2.2", python = ">=3.9"}
 python = ">=3.8"
 rich = ">=13.7.1"
 toml = ">=0.10.2"
