@@ -42,6 +42,6 @@ def useStorage(storage):
 
 @pytest.fixture()
 def storage(tmp_path):
-    storage = external.DiscStorage(tmp_path / ".storage")
+    storage = external.HashStorage(tmp_path / ".storage")
     with useStorage(storage):
         yield storage

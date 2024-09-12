@@ -586,7 +586,7 @@ def test_persist_unknown_external(project):
 from inline_snapshot import external, snapshot
 
 def test_sub_snapshot():
-    external("123*.png")
+    external("hash:123*.png")
     assert 1==snapshot(2)
 """
     )
@@ -598,7 +598,7 @@ def test_sub_snapshot():
 from inline_snapshot import external, snapshot
 
 def test_sub_snapshot():
-    external("123*.png")
+    external("hash:123*.png")
     assert 1==snapshot(1)
 """
     )

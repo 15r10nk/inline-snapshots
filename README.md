@@ -107,7 +107,7 @@ def test_something():
         )
 
     assert outsource("large string\n" * 1000) == snapshot(
-        external("8bf10bdf2c30*.txt")
+        external("hash:8bf10bdf2c30*.txt")
     )
 
     assert "generates\nmultiline\nstrings" == snapshot(

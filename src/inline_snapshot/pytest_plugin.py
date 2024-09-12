@@ -115,7 +115,7 @@ def pytest_configure(config):
 
     snapshot_path = Path(config.rootpath) / ".inline-snapshot/external"
 
-    _external.storage = _external.DiscStorage(snapshot_path)
+    _external.storage = _external.HashStorage(snapshot_path)
 
     if flags - {"short-report", "disable"}:
 
@@ -169,14 +169,14 @@ def pytest_assertrepr_compare(config, op, left, right):
     external_used = False
     if isinstance(right, _external.external):
         external_used = True
-        if right._suffix == ".txt":
+        if right._filename.endswith(".txt"):
             right = right._load_value().decode()
         else:
             right = right._load_value()
 
     if isinstance(left, _external.external):
         external_used = True
-        if left._suffix == ".txt":
+        if left._filename.endswith(".txt"):
             left = left._load_value().decode()
         else:
             left = left._load_value()
@@ -375,7 +375,13 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                         )
 
                     for external_name in used:
-                        _external.storage.persist(external_name)
+                        if ":" in external_name:
+                            storage, path = external_name.split(":", 1)
+
+                            assert storage == "hash"
+                        else:
+                            path = external_name
+                        _external.storage.persist(path)
 
                 cr.fix_all()
 

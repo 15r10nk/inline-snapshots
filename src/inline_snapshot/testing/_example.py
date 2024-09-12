@@ -104,6 +104,9 @@ class Example:
     def _read_files(self, dir: Path):
         return {p.name: p.read_text() for p in dir.iterdir() if p.is_file()}
 
+    def change_code(self, func):
+        return Example({name: func(text) for name, text in self.files.items()})
+
     def run_inline(
         self,
         args: list[str] = [],
@@ -158,7 +161,7 @@ class Example:
                 with ChangeRecorder().activate() as recorder:
                     _inline_snapshot._update_flags = Flags({*flags})
                     inline_snapshot._external.storage = (
-                        inline_snapshot._external.DiscStorage(tmp_path / ".storage")
+                        inline_snapshot._external.HashStorage(tmp_path / ".storage")
                     )
 
                     try:

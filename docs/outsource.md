@@ -35,7 +35,7 @@ Example:
 
     def test_something():
         assert outsource("long text\n" * 1000) == snapshot(
-            external("f5a956460453*.txt")
+            external("hash:f5a956460453*.txt")
         )
     ```
 
@@ -66,9 +66,9 @@ The `external` object can be used inside other data structures.
             outsource("long text\n" * times) for times in [50, 100, 1000]
         ] == snapshot(
             [
-                external("362ad8374ed6*.txt"),
-                external("5755afea3f8d*.txt"),
-                external("f5a956460453*.txt"),
+                external("hash:362ad8374ed6*.txt"),
+                external("hash:5755afea3f8d*.txt"),
+                external("hash:f5a956460453*.txt"),
             ]
         )
     ```

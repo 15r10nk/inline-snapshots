@@ -6,13 +6,14 @@ from typing import Set
 from typing import Union
 
 from . import _config
+from ._inline_snapshot import GenericValue
 
 
 class HashError(Exception):
     pass
 
 
-class DiscStorage:
+class HashStorage:
     def __init__(self, directory):
         self.directory = pathlib.Path(directory)
 
@@ -53,6 +54,9 @@ class DiscStorage:
             file.rename(file.with_name(stem + file.suffix))
 
     def _lookup_path(self, name) -> pathlib.Path:
+        if "*" not in name:
+            p = pathlib.Path(name)
+            name = p.stem + "*" + p.suffix
         files = list(self.directory.glob(name))
 
         if len(files) > 1:
@@ -70,7 +74,7 @@ class DiscStorage:
         self._lookup_path(name).unlink()
 
 
-storage: Optional[DiscStorage] = None
+storage: Optional[HashStorage] = None
 
 
 class external:
@@ -89,15 +93,14 @@ class external:
         m = re.fullmatch(r"([0-9a-fA-F]*)\*?(\.[a-zA-Z0-9]*)", name)
 
         if m:
-            self._hash, self._suffix = m.groups()
+            self._filename = name
+            self._storage = "hash"
+        elif ":" in name:
+            self._storage, self._filename = name.split(":", 1)
         else:
             raise ValueError(
                 "path has to be of the form <hash>.<suffix> or <partial_hash>*.<suffix>"
             )
-
-    @property
-    def _path(self):
-        return f"{self._hash}*{self._suffix}"
 
     def __repr__(self):
         """Returns the representation of the external object.
@@ -105,32 +108,30 @@ class external:
         The length of the hash can be specified in the
         [config](configuration.md).
         """
-        hash = self._hash[: _config.config.hash_length]
 
-        if len(hash) == 64:
-            return f'external("{hash}{self._suffix}")'
-        else:
-            return f'external("{hash}*{self._suffix}")'
+        return f'external("{self._storage}:{self._filename}")'
 
     def __eq__(self, other):
         """Two external objects are equal if they have the same hash and
         suffix."""
-        if not isinstance(other, external):
+        try:
+            value = self._load_value()
+        except HashError:
+            return False
+
+        if isinstance(other, external):
+            return value == other._load_value()
+        elif isinstance(other, GenericValue):
             return NotImplemented
-
-        min_hash_len = min(len(self._hash), len(other._hash))
-
-        if self._hash[:min_hash_len] != other._hash[:min_hash_len]:
-            return False
-
-        if self._suffix != other._suffix:
-            return False
-
-        return True
+        else:
+            return value == other
 
     def _load_value(self):
         assert storage is not None
-        return storage.read(self._path)
+        return storage.read(self._filename)
+
+
+# outsource(data,suffix=".json",storage="hash",path="some/local/path")
 
 
 def outsource(data: Union[str, bytes], *, suffix: Optional[str] = None) -> external:
@@ -177,4 +178,9 @@ def outsource(data: Union[str, bytes], *, suffix: Optional[str] = None) -> exter
         path = hash + "-new" + suffix
         storage.save(path, data)
 
-    return external(name)
+    hash = hash[: _config.config.hash_length]
+    name = hash + "*" + suffix
+
+    e = external("hash:" + name)
+
+    return e

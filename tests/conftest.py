@@ -105,7 +105,7 @@ from inline_snapshot import outsource
                 with ChangeRecorder().activate() as recorder:
                     _inline_snapshot._update_flags = flags
                     inline_snapshot._external.storage = (
-                        inline_snapshot._external.DiscStorage(tmp_path / ".storage")
+                        inline_snapshot._external.HashStorage(tmp_path / ".storage")
                     )
 
                     error = False

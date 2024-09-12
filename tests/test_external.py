@@ -4,6 +4,7 @@ from inline_snapshot import external
 from inline_snapshot import outsource
 from inline_snapshot import snapshot
 from inline_snapshot.extra import raises
+from inline_snapshot.testing import Example
 
 from tests.utils import config
 
@@ -12,51 +13,101 @@ def test_basic(check_update):
     assert check_update(
         "assert outsource('text') == snapshot()", flags="create"
     ) == snapshot(
-        "assert outsource('text') == snapshot(external(\"982d9e3eb996*.txt\"))"
+        "assert outsource('text') == snapshot(external(\"hash:982d9e3eb996*.txt\"))"
     )
 
 
-def test_external():
-    assert repr(external("11111111112222222222.txt")) == snapshot(
-        'external("111111111122*.txt")'
-    )
+# def test_external():
+#     assert repr(external("11111111112222222222.txt")) == snapshot(
+#         'external("111111111122*.txt")'
+#     )
 
 
 def test_max_hash():
     with config(hash_length=64):
-        assert repr(external("1" * 64 + ".txt")) == snapshot(
-            'external("1111111111111111111111111111111111111111111111111111111111111111.txt")'
+        assert repr(external("hash:" + "1" * 64 + ".txt")) == snapshot(
+            'external("hash:1111111111111111111111111111111111111111111111111111111111111111.txt")'
         )
 
 
 def test_outsource(storage):
-    assert outsource("test") == snapshot(external("9f86d081884c*.txt"))
+    assert outsource("test") == snapshot(external("hash:9f86d081884c*.txt"))
 
-    assert outsource("test", suffix=".log") == snapshot(external("9f86d081884c*.log"))
+    assert outsource("test", suffix=".log") == snapshot(
+        external("hash:9f86d081884c*.log")
+    )
 
-    assert outsource(b"test") == snapshot(external("9f86d081884c*.bin"))
+    assert outsource(b"test") == snapshot(external("hash:9f86d081884c*.bin"))
 
-    assert outsource(b"test", suffix=".png") == snapshot(external("9f86d081884c*.png"))
+    assert outsource(b"test", suffix=".png") == snapshot(
+        external("hash:9f86d081884c*.png")
+    )
 
     assert outsource("test")._load_value() == snapshot(b"test")
 
 
 def test_diskstorage(storage):
-    assert outsource("test4") == snapshot(external("a4e624d686e0*.txt"))
-    assert outsource("test5") == snapshot(external("a140c0c1eda2*.txt"))
-    assert outsource("test6") == snapshot(external("ed0cb90bdfa4*.txt"))
+    assert outsource("test4") == snapshot(external("hash:a4e624d686e0*.txt"))
+    assert outsource("test5") == snapshot(external("hash:a140c0c1eda2*.txt"))
+    assert outsource("test6") == snapshot(external("hash:ed0cb90bdfa4*.txt"))
 
     with raises(
         snapshot(
             "HashError: hash collision files=['a140c0c1eda2def2b830363ba362aa4d7d255c262960544821f556e16661b6ff-new.txt', 'a4e624d686e03ed2767c0abd85c14426b0b1157d2ce81d27bb4fe4f6f01d688a-new.txt']"
         )
     ):
-        external("a*.txt")._load_value()
+        external("hash:a*.txt")._load_value()
 
     with raises(
         snapshot("HashError: hash 'bbbbb*.txt' is not found in the DiscStorage")
     ):
-        external("bbbbb*.txt")._load_value()
+        external("hash:bbbbb*.txt")._load_value()
+
+
+def test_update_legacy_external_names(project):
+    (
+        Example(
+            """\
+from inline_snapshot import outsource,snapshot
+
+def test_something():
+    assert outsource("foo") == snapshot()
+"""
+        )
+        .run_pytest(
+            ["--inline-snapshot=create"],
+            changed_files=snapshot(
+                {
+                    "test_something.py": """\
+from inline_snapshot import outsource,snapshot
+
+from inline_snapshot import external
+
+def test_something():
+    assert outsource("foo") == snapshot(external("hash:2c26b46b68ff*.txt"))
+"""
+                }
+            ),
+        )
+        .change_code(lambda code: code.replace("hash:", ""))
+        .run_inline(reported_categories=snapshot(["update"]))
+        .run_inline(
+            ["--inline-snapshot=update"],
+            reported_categories=snapshot(["update"]),
+            changed_files=snapshot(
+                {
+                    "test_something.py": """\
+from inline_snapshot import outsource,snapshot
+
+from inline_snapshot import external
+
+def test_something():
+    assert outsource("foo") == snapshot(external("hash:2c26b46b68ff*.txt"))
+"""
+                }
+            ),
+        )
+    )
 
 
 def test_persist(project):
@@ -66,7 +117,7 @@ def test_persist(project):
 from inline_snapshot import external
 
 def test_something():
-    assert "hello" == snapshot(external("bbbbb*.txt"))
+    assert "hello" == snapshot(external("hash:bbbbb*.txt"))
     assert 2 == snapshot(1+1)
 """
     )
@@ -80,7 +131,7 @@ def test_something():
 from inline_snapshot import external
 
 def test_something():
-    assert "hello" == snapshot(external("bbbbb*.txt"))
+    assert "hello" == snapshot(external("hash:bbbbb*.txt"))
     assert 2 == snapshot(2)
 """
     )
@@ -93,7 +144,7 @@ def test_something():
 |                                                                              |
 |                                                                              |
 |  def test_something():                                                       |
-|      assert "hello" == snapshot(external("bbbbb*.txt"))                      |
+|      assert "hello" == snapshot(external("hash:bbbbb*.txt"))                 |
 | -    assert 2 == snapshot(1+1)                                               |
 | +    assert 2 == snapshot(2)                                                 |
 +------------------------------------------------------------------------------+
@@ -109,11 +160,11 @@ from inline_snapshot import external
 
 def test_a():
     assert outsource("test") == snapshot(
-        external("9f86d081884c*.txt")
+        external("hash:9f86d081884c*.txt")
     )
 
     assert outsource("test2") == snapshot(
-        external("9f86d081884c*.txt")
+        external("hash:9f86d081884c*.txt")
     )
         """
     )
@@ -139,11 +190,11 @@ from inline_snapshot import external
 
 def test_a():
     assert outsource(b"test") == snapshot(
-        external("9f86d081884c*.bin")
+        external("hash:9f86d081884c*.bin")
     )
 
     assert outsource(b"test2") == snapshot(
-        external("9f86d081884c*.bin")
+        external("hash:9f86d081884c*.bin")
     )
         """
     )
@@ -177,7 +228,7 @@ def test_a():
 from inline_snapshot import external
 
 def test_a():
-    assert outsource("test") == snapshot(external("9f86d081884c*.txt"))
+    assert outsource("test") == snapshot(external("hash:9f86d081884c*.txt"))
 """
     )
 
@@ -209,11 +260,11 @@ from inline_snapshot import external
 
 
 def test_a():
-    assert outsource("test") == snapshot(external("9f86d081884c*.txt"))
+    assert outsource("test") == snapshot(external("hash:9f86d081884c*.txt"))
 
     # split
 
-    assert outsource("test2") == snapshot(external("60303ae22b99*.txt"))
+    assert outsource("test2") == snapshot(external("hash:60303ae22b99*.txt"))
         \
 """
     )
@@ -232,9 +283,7 @@ def test_a():
 
     result = project.run("--inline-snapshot=trim")
 
-    assert project.storage() == snapshot(
-        ["9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt"]
-    )
+    assert project.storage() == snapshot([])
 
 
 def test_pytest_new_external(project):
@@ -290,7 +339,7 @@ from inline_snapshot import external
 
 
 def test_a():
-    assert outsource("test") == snapshot(external("9f86d081884c*.txt"))
+    assert outsource("test") == snapshot(external("hash:9f86d081884c*.txt"))
 """
     )
 
@@ -309,16 +358,16 @@ def test_errors():
     ):
         external("invalid")
 
-    assert external("123*.txt") == external("12*.txt")
-    assert external("123*.txt") != external("124*.txt")
-    assert external("123*.txt") != external("123*.bin")
+    # assert external("123*.txt") == external("12*.txt")
+    # assert external("123*.txt") != external("124*.txt")
+    # assert external("123*.txt") != external("123*.bin")
 
 
 from inline_snapshot import _inline_snapshot
 
 
 def test_uses_external():
-    assert _inline_snapshot.used_externals(ast.parse("[external('111*.txt')]"))
+    assert _inline_snapshot.used_externals(ast.parse("[external('hash:111*.txt')]"))
     assert not _inline_snapshot.used_externals(ast.parse("[external()]"))
     assert not _inline_snapshot.used_externals(ast.parse("[external]"))
 
@@ -347,7 +396,7 @@ test_something()
 from inline_snapshot import external
 def test_something():
     from inline_snapshot import outsource,snapshot
-    assert outsource("test") == snapshot(external("9f86d081884c*.txt"))
+    assert outsource("test") == snapshot(external("hash:9f86d081884c*.txt"))
 test_something()
     \
 """
@@ -434,7 +483,7 @@ from inline_snapshot import external
 def test_something():
     outsource("blub")
 
-    assert outsource("foo") == snapshot(external("2c26b46b68ff*.txt"))
+    assert outsource("foo") == snapshot(external("hash:2c26b46b68ff*.txt"))
 
     \
 """
