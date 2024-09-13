@@ -74,6 +74,9 @@ class HashStorage:
         self._lookup_path(name).unlink()
 
 
+class UuidStorage: ...
+
+
 storage: Optional[HashStorage] = None
 
 
@@ -134,53 +137,71 @@ class external:
 # outsource(data,suffix=".json",storage="hash",path="some/local/path")
 
 
-def outsource(data: Union[str, bytes], *, suffix: Optional[str] = None) -> external:
-    """Outsource some data into an external file.
+class outsource:
+    def __init__(
+        self,
+        data: Union[str, bytes],
+        *,
+        suffix: Optional[str] = None,
+        storage="hash",
+        path=None,
+    ) -> external:
+        """Outsource some data into an external file.
 
-    ``` pycon
-    >>> png_data = b"some_bytes"  # should be the replaced with your actual data
-    >>> outsource(png_data, suffix=".png")
-    external("212974ed1835*.png")
+        ``` pycon
+        >>> png_data = b"some_bytes"  # should be the replaced with your actual data
+        >>> outsource(png_data, suffix=".png")
+        external("212974ed1835*.png")
 
-    ```
+        ```
 
-    Parameters:
-        data: data which should be outsourced. strings are encoded with `"utf-8"`.
+        Parameters:
+            data: data which should be outsourced. strings are encoded with `"utf-8"`.
 
-        suffix: overwrite file suffix. The default is `".bin"` if data is an instance of `#!python bytes` and `".txt"` for `#!python str`.
+            suffix: overwrite file suffix. The default is `".bin"` if data is an instance of `#!python bytes` and `".txt"` for `#!python str`.
 
-    Returns:
-        The external data.
-    """
-    if isinstance(data, str):
-        data = data.encode("utf-8")
-        if suffix is None:
-            suffix = ".txt"
+        Returns:
+            The external data.
+        """
 
-    elif isinstance(data, bytes):
-        if suffix is None:
-            suffix = ".bin"
-    else:
-        raise TypeError("data has to be of type bytes | str")
+        self._value = data
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+            if suffix is None:
+                suffix = ".txt"
 
-    if not suffix or suffix[0] != ".":
-        raise ValueError("suffix has to start with a '.' like '.png'")
+        elif isinstance(data, bytes):
+            if suffix is None:
+                suffix = ".bin"
+        else:
+            raise TypeError("data has to be of type bytes | str")
 
-    m = hashlib.sha256()
-    m.update(data)
-    hash = m.hexdigest()
+        if not suffix or suffix[0] != ".":
+            raise ValueError("suffix has to start with a '.' like '.png'")
 
-    assert storage is not None
+        m = hashlib.sha256()
+        m.update(data)
+        hash = m.hexdigest()
 
-    name = hash + suffix
+        assert storage is not None
 
-    if not storage.lookup_all(name):
-        path = hash + "-new" + suffix
-        storage.save(path, data)
+        name = hash + suffix
 
-    hash = hash[: _config.config.hash_length]
-    name = hash + "*" + suffix
+        if not storage.lookup_all(name):
+            path = hash + "-new" + suffix
+            storage.save(path, data)
 
-    e = external("hash:" + name)
+        hash = hash[: _config.config.hash_length]
+        name = hash + "*" + suffix
 
-    return e
+        e = external("hash:" + name)
+
+        return e
+
+    def __eq__(self, other):
+        if not isinstance(other, outsource):
+            return NotImplemented
+        return self._value == other._value
+
+    def __repr__(self):
+        return f"external({todo})"
