@@ -213,7 +213,7 @@ class Example:
         changed_files: Snapshot[dict[str, str]] | None = None,
         report: Snapshot[str] | None = None,
         stderr: Snapshot[str] | None = None,
-        returncode: Snapshot[int] | None = None,
+        returncode: Snapshot[int] | None = 0,
     ) -> Example:
         """Run pytest with the given args and env variables in an seperate
         process.
@@ -244,6 +244,7 @@ class Example:
                 term_columns + 1 if platform.system() == "Windows" else term_columns
             )
             command_env.pop("CI", None)
+            command_env.pop("GITHUB_ACTIONS", None)
 
             command_env.update(env)
 
@@ -255,8 +256,7 @@ class Example:
             print("stderr:")
             print(result.stderr.decode())
 
-            if returncode is not None:
-                assert result.returncode == returncode
+            assert result.returncode == returncode
 
             if stderr is not None:
                 assert result.stderr.decode() == stderr

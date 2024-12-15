@@ -8,6 +8,9 @@ from inline_snapshot.testing import Example
 
 @pytest.mark.no_rewriting
 def test_pypy():
+
+    no_cpython = sys.implementation.name != "cpython"
+
     report = (
         snapshot("INFO: inline-snapshot was disabled because pypy is not supported")
         if sys.implementation.name == "pypy"
@@ -36,6 +39,8 @@ def test_example():
     assert 1+1==snapshot(3)
 
     """
-    ).run_pytest(["--inline-snapshot=fix"], report=report).run_pytest(
-        ["--inline-snapshot=disable"], report=""
+    ).run_pytest(
+        ["--inline-snapshot=fix"], report=report, returncode=1 if no_cpython else 0
+    ).run_pytest(
+        ["--inline-snapshot=disable"], report="", returncode=1 if no_cpython else 0
     )

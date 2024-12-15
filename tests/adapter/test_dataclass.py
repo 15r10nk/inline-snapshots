@@ -234,7 +234,8 @@ class container:
     a: int
     b: int = attrs.field(default=5,repr=False)
 
-assert container(a=1,b=5) == snapshot()
+def test():
+    assert container(a=1,b=5) == snapshot()
 """
     ).run_pytest(
         ["--inline-snapshot=create"],
@@ -249,7 +250,8 @@ class container:
     a: int
     b: int = attrs.field(default=5,repr=False)
 
-assert container(a=1,b=5) == snapshot(container(a=1))
+def test():
+    assert container(a=1,b=5) == snapshot(container(a=1))
 """
             }
         ),
@@ -452,7 +454,7 @@ def test_L3():
     for _ in [1,2]:
         assert L(1,2) == snapshot(L(1, 2)), "not equal"
 """
-    ).run_pytest().run_pytest(
+    ).run_pytest(returncode=snapshot(1)).run_pytest(
         ["--inline-snapshot=fix"],
         changed_files=snapshot(
             {
@@ -499,6 +501,7 @@ def test_L3():
 """
             }
         ),
+        returncode=snapshot(1),
     )
 
 

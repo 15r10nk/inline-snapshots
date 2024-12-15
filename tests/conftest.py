@@ -348,6 +348,8 @@ def set_time(freezer):
             if "CI" in os.environ:
                 del os.environ["CI"]  # pragma: no cover
 
+            os.environ.pop("GITHUB_ACTIONS", None)
+
             try:
                 with mock.patch.dict(
                     os.environ,

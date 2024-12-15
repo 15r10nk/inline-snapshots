@@ -59,7 +59,8 @@ class container(BaseModel):
     a: int
     b: int = Field(default=5,repr=False)
 
-assert container(a=1,b=5) == snapshot()
+def test():
+    assert container(a=1,b=5) == snapshot()
 """
     ).run_pytest(
         ["--inline-snapshot=create"],
@@ -73,7 +74,8 @@ class container(BaseModel):
     a: int
     b: int = Field(default=5,repr=False)
 
-assert container(a=1,b=5) == snapshot(container(a=1))
+def test():
+    assert container(a=1,b=5) == snapshot(container(a=1))
 """
             }
         ),

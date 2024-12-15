@@ -42,6 +42,8 @@ def test_something():
 ```bash exec="1" title="something" result="ansi"
 set -e
 cd $(mktemp -d)
+export -n CI
+export -n GITHUB_ACTIONS
 
 export FORCE_COLOR=256
 export COLUMNS=80
@@ -72,6 +74,8 @@ give a short report over which changes can be made to the snapshots
 
 ```bash exec="1" title="something" result="ansi"
 cd $(mktemp -d)
+export -n CI
+export -n GITHUB_ACTIONS
 
 export FORCE_COLOR=256
 export COLUMNS=80
@@ -105,6 +109,8 @@ Shows a diff report over which changes can be made to the snapshots
 
 ```bash exec="1" title="something" result="ansi"
 cd $(mktemp -d)
+export -n CI
+export -n GITHUB_ACTIONS
 
 export FORCE_COLOR=256
 export COLUMNS=80
@@ -135,6 +141,8 @@ Shows a diff report for each category and ask if you want to apply the changes
 ```bash exec="1" title="something" result="ansi"
 set -e
 cd $(mktemp -d)
+export -n CI
+export -n GITHUB_ACTIONS
 
 export FORCE_COLOR=256
 export COLUMNS=80
