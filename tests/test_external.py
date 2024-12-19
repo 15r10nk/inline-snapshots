@@ -3,9 +3,11 @@ import ast
 from inline_snapshot import external
 from inline_snapshot import outsource
 from inline_snapshot import snapshot
+from inline_snapshot._external._find_external import ensure_import
 from inline_snapshot.extra import raises
 from inline_snapshot.testing import Example
 
+from .utils import apply_changes
 from tests.utils import config
 
 
@@ -401,11 +403,6 @@ test_something()
     \
 """
     )
-
-
-from inline_snapshot._find_external import ensure_import
-
-from .utils import apply_changes
 
 
 def test_ensure_imports(tmp_path):

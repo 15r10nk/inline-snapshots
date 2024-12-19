@@ -5,10 +5,10 @@ from typing import Set
 from executing import Source
 
 from . import _external
-from . import _inline_snapshot
-from ._rewrite_code import ChangeRecorder
-from ._rewrite_code import end_of
-from ._rewrite_code import start_of
+from .. import _inline_snapshot
+from .._rewrite_code import ChangeRecorder
+from .._rewrite_code import end_of
+from .._rewrite_code import start_of
 
 
 def contains_import(tree, module, name):

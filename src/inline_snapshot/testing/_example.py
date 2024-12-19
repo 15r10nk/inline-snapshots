@@ -12,8 +12,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-import inline_snapshot._external
-import inline_snapshot._external as external
+import inline_snapshot._external._external
+import inline_snapshot._external._external as external
 from inline_snapshot._problems import report_problems
 from rich.console import Console
 
@@ -160,7 +160,7 @@ class Example:
             with snapshot_env():
                 with ChangeRecorder().activate() as recorder:
                     _inline_snapshot._update_flags = Flags({*flags})
-                    inline_snapshot._external.storage = (
+                    inline_snapshot._external._external.storage = (
                         inline_snapshot._external.HashStorage(tmp_path / ".storage")
                     )
 

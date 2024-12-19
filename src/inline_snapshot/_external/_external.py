@@ -1,12 +1,14 @@
 import hashlib
+import io
 import pathlib
 import re
+import typing
 from typing import Optional
 from typing import Set
 from typing import Union
 
-from . import _config
-from ._inline_snapshot import GenericValue
+from .. import _config
+from .._inline_snapshot import GenericValue
 
 
 class HashError(Exception):
@@ -135,6 +137,57 @@ class external:
 
 
 # outsource(data,suffix=".json",storage="hash",path="some/local/path")
+class Format:
+
+    suffix: str
+
+    @staticmethod
+    def handle_type(typ):
+        raise NotImplementedError
+
+    @staticmethod
+    def encode(value, file):
+        raise NotImplementedError
+
+    @staticmethod
+    def decode(file, meta):
+        raise NotImplementedError
+
+
+class BinFormat(Format):
+    suffix = ".bin"
+
+    @staticmethod
+    def handle_type(typ):
+        return typ is bytes
+
+    @staticmethod
+    def encode(value: bytes, file: typing.BinaryIO):
+        file.write(value)
+
+    @staticmethod
+    def decode(file: typing.BinaryIO, meta) -> bytes:
+        return file.read()
+
+
+class TxtFormat(Format):
+    suffix = ".txt"
+
+    @staticmethod
+    def handle_type(typ):
+        return typ is str
+
+    @staticmethod
+    def encode(value: str, file: typing.BinaryIO):
+        file.write(value.encode("utf-8"))
+
+    @staticmethod
+    def decode(file: typing.BinaryIO, meta) -> str:
+        return file.read().decode("utf-8")
+
+
+def all_formats():
+    return Format.__subclasses__()
 
 
 class outsource:
@@ -145,7 +198,7 @@ class outsource:
         suffix: Optional[str] = None,
         storage="hash",
         path=None,
-    ) -> external:
+    ):
         """Outsource some data into an external file.
 
         ``` pycon
@@ -165,43 +218,34 @@ class outsource:
         """
 
         self._value = data
-        if isinstance(data, str):
-            data = data.encode("utf-8")
-            if suffix is None:
-                suffix = ".txt"
-
-        elif isinstance(data, bytes):
-            if suffix is None:
-                suffix = ".bin"
-        else:
-            raise TypeError("data has to be of type bytes | str")
+        if suffix is None:
+            for formater in all_formats():
+                if formater.handle_type(type(data)):
+                    suffix = formater.suffix
+                    format = formater
+                    break
+            else:
+                raise TypeError("data has to be of type bytes | str")
 
         if not suffix or suffix[0] != ".":
             raise ValueError("suffix has to start with a '.' like '.png'")
 
+        file = io.BytesIO()
+
+        format.encode(data, file)
+
         m = hashlib.sha256()
-        m.update(data)
+        m.update(file.getvalue())
         hash = m.hexdigest()
 
-        assert storage is not None
-
-        name = hash + suffix
-
-        if not storage.lookup_all(name):
-            path = hash + "-new" + suffix
-            storage.save(path, data)
-
-        hash = hash[: _config.config.hash_length]
-        name = hash + "*" + suffix
-
-        e = external("hash:" + name)
-
-        return e
+        self._hash = hash[: _config.config.hash_length]
+        self._name = hash + "*" + suffix
+        self._storage = storage
 
     def __eq__(self, other):
         if not isinstance(other, outsource):
             return NotImplemented
-        return self._value == other._value
+        return self._value == other
 
     def __repr__(self):
-        return f"external({todo})"
+        return f"external('{self._storage}:{self._name}')"

@@ -12,12 +12,12 @@ from rich.prompt import Confirm
 from rich.syntax import Syntax
 
 from . import _config
-from . import _external
-from . import _find_external
 from . import _inline_snapshot
 from ._change import apply_all
 from ._code_repr import used_hasrepr
-from ._find_external import ensure_import
+from ._external import _external
+from ._external import _find_external
+from ._external._find_external import ensure_import
 from ._inline_snapshot import used_externals
 from ._rewrite_code import ChangeRecorder
 
