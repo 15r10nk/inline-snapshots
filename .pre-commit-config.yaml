@@ -16,7 +16,7 @@ repos:
   - id: check-json
   - id: end-of-file-fixer
   repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
+  rev: v5.0.0
 - hooks:
   - args:
     - --in-place
@@ -28,12 +28,12 @@ repos:
   rev: v2.3.1
 
 - repo: https://github.com/asottile/setup-cfg-fmt
-  rev: v2.5.0
+  rev: v2.7.0
   hooks:
   - id: setup-cfg-fmt
 
 - repo: https://github.com/asottile/reorder-python-imports
-  rev: v3.13.0
+  rev: v3.14.0
   hooks:
   - args:
     - --py38-plus
@@ -43,16 +43,16 @@ repos:
     - --py38-plus
     id: pyupgrade
   repo: https://github.com/asottile/pyupgrade
-  rev: v3.17.0
+  rev: v3.19.1
 - hooks:
   - id: black
   repo: https://github.com/psf/black
-  rev: 24.8.0
+  rev: 24.10.0
 - hooks:
   - id: blacken-docs
     args: [-l80]
   repo: https://github.com/adamchainz/blacken-docs
-  rev: 1.18.0
+  rev: 1.19.1
 
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
@@ -66,7 +66,7 @@ repos:
     stages:
     - commit-msg
   repo: https://github.com/commitizen-tools/commitizen
-  rev: v3.28.0
+  rev: v4.1.0
 
 
 # - repo: https://github.com/PyCQA/docformatter
@@ -82,6 +82,6 @@ repos:
     additional_dependencies: ['validate-pyproject-schema-store[all]']
 
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.7.4
+  rev: v1.7.6
   hooks:
   - id: actionlint
