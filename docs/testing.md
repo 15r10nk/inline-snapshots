@@ -28,6 +28,7 @@ The following example shows how you can use the `Example` class to test what inl
         ).run_pytest(  # run without flags and check the pytest report
             changed_files=snapshot(),
             report=snapshot(),
+            returncode=snapshot(),
         ).run_pytest(  # run with create flag and check the changed files
             ["--inline-snapshot=create"],
             changed_files=snapshot(),
@@ -37,7 +38,7 @@ The following example shows how you can use the `Example` class to test what inl
 === "--inline-snapshot=create"
 
     <!-- inline-snapshot: create outcome-passed=1 -->
-    ``` python hl_lines="16 18 19 20 21 22 23 24 27 28 29 30 31 32 33 34 35"
+    ``` python hl_lines="16 18 19 20 21 22 23 24 25 28 29 30 31 32 33 34 35 36"
     from inline_snapshot.testing import Example
     from inline_snapshot import snapshot
 
@@ -62,6 +63,7 @@ The following example shows how you can use the `Example` class to test what inl
     You can also use --inline-snapshot=review to approve the changes interactively\
     """
             ),
+            returncode=snapshot(1),
         ).run_pytest(  # run with create flag and check the changed files
             ["--inline-snapshot=create"],
             changed_files=snapshot(

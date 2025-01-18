@@ -72,6 +72,27 @@ def xdist_running(config):
     )
 
 
+def is_ci_run():
+    ci_env_vars = (
+        "CI",
+        "bamboo.buildKey",
+        "BUILD_ID",
+        "BUILD_NUMBER",
+        "BUILDKITE",
+        "CIRCLECI",
+        "CONTINUOUS_INTEGRATION",
+        "GITHUB_ACTIONS",
+        "HUDSON_URL",
+        "JENKINS_URL",
+        "TEAMCITY_VERSION",
+        "TRAVIS",
+    )
+    for var in ci_env_vars:
+        if os.environ.get(var, False):
+            return var
+    return False
+
+
 def is_implementation_supported():
     return sys.implementation.name == "cpython"
 
@@ -107,7 +128,7 @@ def pytest_configure(config):
             f"--inline-snapshot=disable can not be combined with other flags ({', '.join(flags-{'disable'})})"
         )
 
-    if xdist_running(config) or not is_implementation_supported():
+    if xdist_running(config) or not is_implementation_supported() or is_ci_run():
         state().active = False
 
     elif flags & {"review"}:
@@ -208,6 +229,15 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             terminalreporter.section("inline snapshot")
             terminalreporter.write(
                 "INFO: inline-snapshot was disabled because you used xdist\n"
+            )
+        return
+
+    if var := is_ci_run():
+        if flags != {"disable"}:
+            terminalreporter.section("inline snapshot")
+            terminalreporter.write(
+                f'INFO: CI run was detected because environment variable "{var}" was defined.\n'
+                + "INFO: inline-snapshot runs with --inline-snapshot=disabled by default in CI.\n"
             )
         return
 
