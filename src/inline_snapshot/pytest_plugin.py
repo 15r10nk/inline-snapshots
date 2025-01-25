@@ -62,7 +62,7 @@ def pytest_addoption(parser, pluginmanager):
             )
 
 
-categories = {"create", "update", "trim", "fix"}
+categories = Flags.all().to_set()
 flags = set()
 
 
@@ -114,7 +114,7 @@ def pytest_configure(config):
     elif flags & {"review"}:
         state().active = True
 
-        state().update_flags = Flags({"fix", "create", "update", "trim"})
+        state().update_flags = Flags.all()
     else:
 
         state().active = "disable" not in flags
@@ -167,6 +167,7 @@ def snapshot_check():
 
 
 def pytest_assertrepr_compare(config, op, left, right):
+
     results = []
     if isinstance(left, GenericValue):
         results = config.hook.pytest_assertrepr_compare(
@@ -254,19 +255,9 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             return False
 
     # auto mode
-    changes = {
-        "update": [],
-        "fix": [],
-        "trim": [],
-        "create": [],
-    }
+    changes = {f: [] for f in Flags.all()}
 
-    snapshot_changes = {
-        "update": 0,
-        "fix": 0,
-        "trim": 0,
-        "create": 0,
-    }
+    snapshot_changes = {f: 0 for f in Flags.all()}
 
     for snapshot in state().snapshots.values():
         all_categories = set()
@@ -331,7 +322,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             )
 
         used_changes = []
-        for flag in ("create", "fix", "trim", "update"):
+        for flag in Flags.all():
             if not changes[flag]:
                 continue
 

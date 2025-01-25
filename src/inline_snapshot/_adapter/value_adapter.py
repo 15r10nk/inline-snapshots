@@ -3,13 +3,13 @@ from __future__ import annotations
 import ast
 import warnings
 
-from inline_snapshot._code_repr import value_code_repr
-from inline_snapshot._unmanaged import Unmanaged
-from inline_snapshot._unmanaged import update_allowed
-from inline_snapshot._utils import value_to_token
-from inline_snapshot.syntax_warnings import InlineSnapshotInfo
-
 from .._change import Replace
+from .._code_repr import value_code_repr
+from .._sentinels import undefined
+from .._unmanaged import Unmanaged
+from .._unmanaged import update_allowed
+from .._utils import value_to_token
+from ..syntax_warnings import InlineSnapshotInfo
 from .adapter import Adapter
 
 
@@ -46,7 +46,10 @@ class ValueAdapter(Adapter):
             return old_value
 
         if not old_value == new_value:
-            flag = "fix"
+            if old_value is undefined:
+                flag = "create"
+            else:
+                flag = "fix"
         elif (
             old_node is not None
             and update_allowed(old_value)

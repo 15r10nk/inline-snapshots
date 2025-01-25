@@ -132,14 +132,13 @@ class Example:
 
             self._write_files(tmp_path)
 
-            raised_exception = None
+            raised_exception = []
             with snapshot_env() as state:
                 with ChangeRecorder().activate() as recorder:
                     state.update_flags = Flags({*flags})
                     inline_snapshot._external.storage = (
                         inline_snapshot._external.DiscStorage(tmp_path / ".storage")
                     )
-
                     try:
                         for filename in tmp_path.glob("*.py"):
                             globals: dict[str, Any] = {}
@@ -152,11 +151,11 @@ class Example:
                             # run all test_* functions
                             for k, v in globals.items():
                                 if k.startswith("test_") and callable(v):
-                                    v()
-                    except Exception as e:
-                        traceback.print_exc()
-                        raised_exception = e
-
+                                    try:
+                                        v()
+                                    except Exception as e:
+                                        traceback.print_exc()
+                                        raised_exception.append(e)
                     finally:
                         state.active = False
 
@@ -184,9 +183,9 @@ class Example:
             if reported_categories is not None:
                 assert sorted(snapshot_flags) == reported_categories
 
-            if raised_exception is not None:
-                assert raises == f"{type(raised_exception).__name__}:\n" + str(
-                    raised_exception
+            if raised_exception:
+                assert raises == "\n".join(
+                    f"{type(e).__name__}:\n" + str(e) for e in raised_exception
                 )
             else:
                 assert raises == None

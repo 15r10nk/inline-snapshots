@@ -6,7 +6,6 @@ ci:
 
 repos:
 - hooks:
-  - id: check-yaml
   - id: check-ast
   - id: check-merge-conflict
   - id: trailing-whitespace
