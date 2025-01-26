@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from executing import is_pytest_compatible
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -61,7 +62,7 @@ def pytest_addoption(parser, pluginmanager):
             )
 
 
-categories = {"create", "update", "trim", "fix"}
+categories = Flags.all().to_set()
 flags = set()
 
 
@@ -113,7 +114,7 @@ def pytest_configure(config):
     elif flags & {"review"}:
         state().active = True
 
-        state().update_flags = Flags({"fix", "create", "update", "trim"})
+        state().update_flags = Flags.all()
     else:
 
         state().active = "disable" not in flags
@@ -126,7 +127,7 @@ def pytest_configure(config):
 
     _external.storage = _external.DiscStorage(external_storage)
 
-    if flags - {"short-report", "disable"}:
+    if flags - {"short-report", "disable"} and not is_pytest_compatible():
 
         # hack to disable the assertion rewriting
         # I found no other way because the hook gets installed early
@@ -166,6 +167,7 @@ def snapshot_check():
 
 
 def pytest_assertrepr_compare(config, op, left, right):
+
     results = []
     if isinstance(left, GenericValue):
         results = config.hook.pytest_assertrepr_compare(
@@ -253,19 +255,9 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             return False
 
     # auto mode
-    changes = {
-        "update": [],
-        "fix": [],
-        "trim": [],
-        "create": [],
-    }
+    changes = {f: [] for f in Flags.all()}
 
-    snapshot_changes = {
-        "update": 0,
-        "fix": 0,
-        "trim": 0,
-        "create": 0,
-    }
+    snapshot_changes = {f: 0 for f in Flags.all()}
 
     for snapshot in state().snapshots.values():
         all_categories = set()
@@ -324,12 +316,13 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
             return
 
-        assert not any(
-            type(e).__name__ == "AssertionRewritingHook" for e in sys.meta_path
-        )
+        if not is_pytest_compatible():
+            assert not any(
+                type(e).__name__ == "AssertionRewritingHook" for e in sys.meta_path
+            )
 
         used_changes = []
-        for flag in ("create", "fix", "trim", "update"):
+        for flag in Flags.all():
             if not changes[flag]:
                 continue
 

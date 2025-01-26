@@ -940,3 +940,29 @@ def test_Is():
             }
         ),
     )
+
+
+def test_create_elipsis():
+    Example(
+        """\
+from inline_snapshot import snapshot
+
+def test_a():
+    assert 1+1==snapshot(...)
+    assert [1,2,8] == snapshot([1,2,...])
+        """
+    ).run_inline(
+        ["--inline-snapshot=create"],
+        changed_files=snapshot(
+            {
+                "test_something.py": """\
+from inline_snapshot import snapshot
+
+def test_a():
+    assert 1+1==snapshot(2)
+    assert [1,2,8] == snapshot([1,2,8])
+        \
+"""
+            }
+        ),
+    )

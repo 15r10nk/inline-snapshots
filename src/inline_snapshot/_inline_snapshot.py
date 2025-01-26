@@ -116,7 +116,11 @@ class SnapshotReference:
 
     def _changes(self):
 
-        if self._value._old_value is undefined:
+        if (
+            self._value._old_value is undefined
+            if self._expr is None
+            else not self._expr.node.args
+        ):
 
             if self._value._new_value is undefined:
                 return

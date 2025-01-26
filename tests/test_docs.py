@@ -9,8 +9,10 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
+from executing import is_pytest_compatible
 
 from inline_snapshot import snapshot
+from inline_snapshot._flags import Flags
 from inline_snapshot._global_state import state
 from inline_snapshot.extra import raises
 
@@ -279,7 +281,6 @@ line-length=80
 
         if block.code_header.startswith("todo-inline-snapshot:"):
             return block
-            assert False
 
         nonlocal last_code
         with subtests.test(line=block.line):
@@ -288,7 +289,10 @@ line-length=80
 
             options = set(block.code_header.split())
 
-            flags = options & {"fix", "update", "create", "trim"}
+            if "requires_assert" in options and not is_pytest_compatible():
+                return block
+
+            flags = options & Flags.all().to_set()
 
             args = ["--inline-snapshot", ",".join(flags)] if flags else []
 
@@ -328,7 +332,7 @@ line-length=80
 
             block.code_header = "inline-snapshot: " + " ".join(
                 sorted(flags)
-                + sorted(options & {"first_block", "show_error"})
+                + sorted(options & {"first_block", "show_error", "requires_assert"})
                 + [
                     f"outcome-{k}={v}"
                     for k, v in result.parseoutcomes().items()
@@ -359,7 +363,7 @@ line-length=80
 
             block.code = new_code
 
-            if flags:
+            if flags - {"create"}:
                 assert result.ret == 0
 
             last_code = code

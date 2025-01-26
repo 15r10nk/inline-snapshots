@@ -9,6 +9,8 @@ theme:
   features:
   - toc.follow
   - content.code.annotate
+  - navigation.tabs
+
   palette:
   - media: (prefers-color-scheme)
 
@@ -34,7 +36,13 @@ watch:
 - src/inline_snapshot
 
 nav:
-- Introduction: index.md
+- Home:
+  - Introduction: index.md
+  - Configuration: configuration.md
+  - pytest integration: pytest.md
+  - Categories: categories.md
+  - Code generation: code_generation.md
+  - Limitations: limitations.md
 - Core:
   - x == snapshot(): eq_snapshot.md
   - x <= snapshot(): cmp_snapshot.md
@@ -46,14 +54,10 @@ nav:
 - Extensions:
   - first-party (extra): extra.md
   - third-party: third_party.md
-- pytest integration: pytest.md
-- Categories: categories.md
-- Configuration: configuration.md
-- Code generation: code_generation.md
-- Testing: testing.md
-- Limitations: limitations.md
-- Contributing: contributing.md
-- Changelog: changelog.md
+- Development:
+  - Testing: testing.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
 
 
 
@@ -73,6 +77,9 @@ markdown_extensions:
 - pymdownx.tabbed:
     alternate_style: true
 - attr_list
+- pymdownx.emoji:
+    emoji_index: !!python/name:material.extensions.emoji.twemoji
+    emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 plugins:
 - mkdocstrings:
